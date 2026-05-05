@@ -1,14 +1,14 @@
 const { Telegraf } = require('telegraf');
 const http = require('http');
 
-// Using your provided token
+// Your provided bot token
 const bot = new Telegraf('8366724603:AAEH8i-CIKSF-qAI7xNnUpBf6VvqFg6BCsI');
 
-// Using your provided short name
+// Your provided game short name
 const GAME_SHORT_NAME = 'monkeyrest'; 
 
-// Replace this with your actual GitHub Pages link
-const GAME_URL = 'YOUR_GITHUB_PAGES_URL'; 
+// Your actual GitHub Pages live link
+const GAME_URL = 'https://lhdg14.github.io/monkey-restaurant/'; 
 
 bot.command('start', (ctx) => {
     return ctx.replyWithGame(GAME_SHORT_NAME);
