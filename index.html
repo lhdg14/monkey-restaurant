@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Monkey Restaurant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700;900&display=swap');
+
+        :root {
+            --floor-color: #fde68a; --floor-dark: #fcd34d; --wall-color: #b45309;
+            --counter-top: #f8fafc; --counter-base: #d97706; --table-surface: #ffffff; --chair-color: #94a3b8;
+        }
+
+        .theme-wood { --floor-color: #b45309; --floor-dark: #92400e; --wall-color: #451a03; --counter-top: #fef3c7; --counter-base: #78350f; --table-surface: #fffbeb; --chair-color: #1e293b; }
+        .theme-pink { --floor-color: #fbcfe8; --floor-dark: #f9a8d4; --wall-color: #be185d; --counter-top: #ffffff; --counter-base: #db2777; --table-surface: #fdf2f8; --chair-color: #f472b6; }
+        .theme-black { --floor-color: #1e293b; --floor-dark: #0f172a; --wall-color: #020617; --counter-top: #334155; --counter-base: #0f172a; --table-surface: #1e293b; --chair-color: #64748b; }
+        .theme-navy { --floor-color: #1e3a8a; --floor-dark: #172554; --wall-color: #0f172a; --counter-top: #3b82f6; --counter-base: #1d4ed8; --table-surface: #eff6ff; --chair-color: #60a5fa; }
+        .theme-island { --floor-color: #fef08a; --floor-dark: #fde047; --wall-color: #0ea5e9; --counter-top: #bae6fd; --counter-base: #0284c7; --table-surface: #ffffff; --chair-color: #38bdf8; }
+        .theme-airport { --floor-color: #cbd5e1; --floor-dark: #94a3b8; --wall-color: #334155; --counter-top: #f1f5f9; --counter-base: #475569; --table-surface: #e2e8f0; --chair-color: #0f172a; }
+        .theme-saudi { --floor-color: #d1fae5; --floor-dark: #bbf7d0; --wall-color: #064e3b; --counter-top: #f0fdf4; --counter-base: #14532d; --table-surface: #ffffff; --chair-color: #10b981; }
+        .theme-cruise { --floor-color: #7dd3fc; --floor-dark: #38bdf8; --wall-color: #0284c7; --counter-top: #ffffff; --counter-base: #0369a1; --table-surface: #f0f9ff; --chair-color: #0ea5e9; }
+        .theme-desert { --floor-color: #fcd34d; --floor-dark: #fbbf24; --wall-color: #78350f; --counter-top: #fef3c7; --counter-base: #92400e; --table-surface: #fffbeb; --chair-color: #f59e0b; }
+
+        * { box-sizing: border-box; touch-action: manipulation; }
+
+        body { font-family: 'Quicksand', sans-serif; background: #0f172a; margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; width: 100vw; height: 100vh; color: #1e293b; }
+        .font-game { font-family: 'Fredoka One', cursive; }
+
+        #wrapper { width: 400px; height: 800px; position: relative; overflow: hidden; transform-origin: center center; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+
+        #app { width: 100%; height: 100%; display: flex; flex-direction: column; background: repeating-linear-gradient(45deg, var(--floor-color), var(--floor-color) 40px, var(--floor-dark) 40px, var(--floor-dark) 80px); position: absolute; transition: background 0.5s; }
+
+        /* HUD */
+        #hud { height: 75px; background: rgba(255, 255, 255, 0.95); border-bottom: 4px solid var(--wall-color); display: flex; align-items: center; justify-content: space-between; padding: 0 10px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .tray-slot { width: 34px; height: 34px; background: #f1f5f9; border: 2px solid #cbd5e1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; position: relative; }
+        .tray-badge { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; font-size: 9px; font-weight: bold; padding: 1px 4px; border-radius: 4px; z-index: 10; }
+
+        #play-area { flex-grow: 1; position: relative; overflow: hidden; direction: ltr !important; }
+
+        #night-overlay { position: absolute; inset: 0; background: #0f172a; opacity: 0; mix-blend-mode: multiply; pointer-events: none; transition: opacity 2s ease-in-out; z-index: 90; }
+        .night-mode #night-overlay { opacity: 0.35; }
+
+        /* Decor */
+        .decor-item { position: absolute; opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 5; }
+        .decor-item.active { opacity: 1; }
+        #decor-radio { top: 100px; left: 15px; font-size: 30px; z-index: 10;}
+        #decor-tv { top: 85px; left: 50%; transform: translateX(-50%); font-size: 40px; z-index: 10;}
+        #decor-fountain { bottom: 15px; right: 20px; font-size: 55px; filter: drop-shadow(0 5px 2px rgba(0,0,0,0.2)); }
+        #decor-artist { bottom: 15px; left: 20px; font-size: 50px; filter: drop-shadow(0 5px 2px rgba(0,0,0,0.2)); }
+        
+        .music-note { position: absolute; font-size: 18px; animation: floatNote 2s infinite; opacity: 0; }
+        @keyframes floatNote { 0% { transform: translateY(0) scale(0.8); opacity: 1; } 100% { transform: translateY(-30px) scale(1.2); opacity: 0; } }
+
+        /* Stations & Drive Thru */
+        .station { position: absolute; top: 15px; width: 90px; height: 80px; background: var(--counter-base); border-radius: 12px; border-top: 30px solid var(--counter-top); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 5px; cursor: pointer; z-index: 50; box-shadow: 0 8px 0 rgba(0,0,0,0.2), 0 12px 10px rgba(0,0,0,0.3); transition: transform 0.1s; }
+        .station:active { transform: translateY(4px); box-shadow: 0 4px 0 rgba(0,0,0,0.2), 0 6px 5px rgba(0,0,0,0.3); }
+        #station-sweets { right: 15px; } #station-mains { left: 15px; }
+        .chef { position: absolute; top: -35px; font-size: 35px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); pointer-events: none; }
+        .cooking-bg { width: 80%; height: 6px; background: rgba(0,0,0,0.3); border-radius: 3px; margin-bottom: 4px; overflow: hidden; pointer-events: none; }
+        .cooking-fill { height: 100%; background: #4ade80; transition: width 0.1s linear; }
+        .counter-plates { position: absolute; top: -5px; width: 100%; display: flex; justify-content: center; gap: 2px; font-size: 18px; pointer-events: none; }
+
+        #drive-thru { display: none; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 60px; height: 120px; background: #334155; border: 4px solid #0f172a; border-right: none; border-radius: 12px 0 0 12px; flex-direction: column; align-items: center; justify-content: center; z-index: 40; cursor: pointer; box-shadow: -5px 5px 10px rgba(0,0,0,0.3); transition: transform 0.1s; }
+        #drive-thru:active { transform: translateY(-50%) translateX(4px); }
+        .dt-road { position: absolute; right: -20px; top: -10px; bottom: -10px; width: 40px; background: #1e293b; z-index: -1;}
+
+        /* Tables */
+        #tables-container { position: absolute; top: 140px; bottom: 90px; left: 15px; right: 65px; display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: 20px; z-index: 20; padding-top: 10px;}
+        .table-group { width: 60px; height: 70px; position: relative; cursor: pointer; transition: all 0.2s; }
+        .table-group:active { transform: scale(0.95); }
+        .table-group.upgraded { width: 90px; }
+        .table-surface { position: absolute; top: 15px; left: 0; width: 100%; height: 40px; background: var(--table-surface); border: 3px solid #cbd5e1; border-radius: 6px; box-shadow: 0 5px 0 rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; z-index: 2; transition: width 0.3s, background 0.5s; }
+        
+        .chair { position: absolute; width: 24px; height: 24px; background: var(--chair-color); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 16px; line-height: 1; z-index: 1; box-shadow: 0 3px 0 rgba(0,0,0,0.2); transition: all 0.3s; }
+        .chair-bot-1 { bottom: -5px; left: 50%; transform: translateX(-50%); z-index: 3; }
+        .chair-bot-left { bottom: -5px; left: 10px; z-index: 3; }
+        .chair-bot-right { bottom: -5px; right: 10px; z-index: 3; }
+        
+        /* Customers UI */
+        .customer-fig { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 100%; height: 100%; pointer-events: none; }
+        .customer-head { font-size: 20px; line-height: 1; z-index: 2; position: relative; display: flex; justify-content: center; align-items: center;}
+        .customer-acc { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-size: 14px; z-index: 5; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));}
+        
+        .customer-body { width: 16px; height: 10px; border-radius: 40% 40% 10% 10%; margin-top: -2px; z-index: 1; box-shadow: inset 0 -2px rgba(0,0,0,0.2); }
+        .customer-body-suit { width: 16px; height: 10px; border-radius: 40% 40% 10% 10%; margin-top: -2px; z-index: 1; background: #111; position: relative; overflow: hidden; }
+        .customer-body-suit::after { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 4px; height: 10px; background: white; }
+        .customer-body-white-suit { width: 16px; height: 10px; border-radius: 40% 40% 10% 10%; margin-top: -2px; z-index: 1; background: #f8fafc; border: 1px solid #cbd5e1; position: relative; overflow: hidden; }
+        .customer-body-white-suit::after { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 4px; height: 10px; background: #1e293b; }
+
+        .niqab-overlay { position: absolute; inset: -2px; background: #111; border-radius: 50%; clip-path: polygon(0% 0%, 100% 0%, 100% 28%, 0% 28%, 0% 52%, 100% 52%, 100% 100%, 0% 100%); z-index: 4; }
+        .shimagh-overlay { position: absolute; top: -2px; left: -2px; right: -2px; height: 12px; background: repeating-linear-gradient(45deg, #ef4444, #ef4444 2px, #fff 2px, #fff 4px); border-radius: 12px 12px 0 0; z-index: 4; box-shadow: inset 0 2px 0 #000; }
+
+        .super-vip-label { position: absolute; top: -22px; color: #fbbf24; font-size: 9px; font-weight: 900; background: #1e293b; padding: 1px 4px; border-radius: 4px; border: 1px solid #fbbf24; animation: pulse 1s infinite; z-index: 6;}
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+        .table-id-tag { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 900; color: white; background: rgba(0,0,0,0.5); padding: 1px 4px; border-radius: 4px; pointer-events: none; }
+        .bubble { position: absolute; top: -42px; left: 50%; transform: translateX(-50%); background: white; border: 2px solid #e2e8f0; padding: 2px 6px; border-radius: 12px; font-size: 16px; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 2px; box-shadow: 0 4px 6px rgba(0,0,0,0.15); z-index: 10; pointer-events: none; white-space: nowrap; color: #1e293b;}
+        .patience-bar { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 40px; height: 5px; background: #cbd5e1; border-radius: 4px; overflow: hidden; }
+        .patience-fill { height: 100%; transition: width 0.2s linear; }
+
+        /* Queue */
+        #queue-area { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; background: rgba(255,255,255,0.7); padding: 8px 16px; border-radius: 30px; border: 2px solid white; z-index: 50; cursor: pointer; transition: opacity 0.5s;}
+        .night-mode #queue-area { opacity: 0; pointer-events: none; }
+        .q-spot { width: 48px; height: 48px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; gap: 2px; box-shadow: 0 4px 0 #cbd5e1; cursor: pointer; transition: all 0.1s; }
+        .q-spot.selected { border: 3px solid #f59e0b; transform: translateY(-5px); box-shadow: 0 8px 0 #d97706; }
+
+        /* Entities Layer */
+        #entities-layer { position: absolute; inset: 0; pointer-events: none; z-index: 100; }
+        .sprite { position: absolute; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; font-size: 35px; filter: drop-shadow(0 5px 3px rgba(0,0,0,0.3)); z-index: 100; will-change: transform; }
+        .sprite-tag { position: absolute; top: -16px; font-size: 10px; font-weight: 900; background: white; padding: 2px 6px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); white-space: nowrap; color: #1e293b;}
+
+        /* Modals & FX */
+        .modal-wrap { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .money-float { position: absolute; color: #16a34a; font-size: 20px; font-weight: 900; text-shadow: 0 2px 0 #fff, 0 -2px 0 #fff, 2px 0 0 #fff, -2px 0 0 #fff; pointer-events: none; z-index: 500; animation: floatUp 1.5s ease-out forwards; display: flex; flex-direction: column; align-items: center; line-height: 1; }
+        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-60px); opacity: 0; } }
+
+        .shop-tab { flex: 1; padding: 14px 0; font-family: 'Fredoka One', cursive; text-align: center; color: #94a3b8; border-bottom: 2px solid #e2e8f0; transition: all 0.2s; cursor: pointer; }
+        .shop-tab.active { color: #0ea5e9; border-bottom: 4px solid #0ea5e9; background: white; }
+    </style>
+</head>
+<body>
+
+<div id="wrapper">
+<div id="app">
+    <!-- Language Modal -->
+    <div id="modal-lang" class="modal-wrap">
+        <div class="bg-white p-8 rounded-[35px] text-center w-[90%] max-w-sm shadow-2xl border-b-8 border-sky-200">
+            <h1 class="text-3xl font-game text-sky-500 mb-6">Select Language<br><span class="text-2xl font-sans mt-2 block font-bold">اختر اللغة</span></h1>
+            <div class="flex gap-4">
+                <button onclick="window.Game.setLanguage('en')" class="flex-1 bg-sky-500 text-white font-game py-4 rounded-2xl text-xl shadow-md active:scale-95 transition">English</button>
+                <button onclick="window.Game.setLanguage('ar')" class="flex-1 bg-amber-500 text-white font-sans font-bold py-4 rounded-2xl text-xl shadow-md active:scale-95 transition">العربية</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Modal -->
+    <div id="modal-start" class="modal-wrap hidden">
+        <div class="bg-white p-6 rounded-[35px] text-center w-[90%] max-w-sm shadow-2xl border-b-8 border-amber-200 flex flex-col items-center">
+            <h1 class="text-3xl font-game text-amber-500 mb-1" id="ui-t-title">Monkey Restaurant</h1>
+            <div class="bg-slate-50 p-4 rounded-xl mb-4 mt-2 text-sm text-slate-700 font-bold space-y-2 text-start border border-slate-200 w-full" id="ui-t-rules">
+                <p>🪑 Seat customers by clicking them, then a table.</p>
+                <p>📝 Take their order, cook it, and serve it fast!</p>
+                <p>💵 Collect money, upgrade your restaurant, and hire staff!</p>
+            </div>
+            
+            <button onclick="window.Game.startDay(false)" class="w-full bg-amber-500 text-white font-game py-4 rounded-2xl text-xl active:scale-95 transition shadow-md mb-2" id="ui-t-start">NEW GAME</button>
+            <button onclick="window.Game.startDay(true)" id="btn-continue" class="w-full bg-sky-500 text-white font-game py-4 rounded-2xl text-xl active:scale-95 transition shadow-md hidden">CONTINUE</button>
+        </div>
+    </div>
+
+    <!-- Pause Modal -->
+    <div id="modal-pause" class="modal-wrap hidden" onclick="window.Game.resumeGame()">
+        <div class="text-center">
+            <div class="text-white text-5xl font-game animate-pulse mb-4" id="ui-t-pause">Paused</div>
+            <div class="text-slate-300 font-bold text-xl bg-slate-900/50 px-6 py-2 rounded-full" id="ui-t-resume">Click anywhere to resume</div>
+        </div>
+    </div>
+
+    <!-- Code Prompt Modal -->
+    <div id="modal-code" class="modal-wrap hidden">
+        <div class="bg-white p-6 rounded-[35px] text-center w-[80%] max-w-sm shadow-2xl border-b-8 border-purple-200">
+            <h1 class="text-2xl font-game text-purple-500 mb-4" id="ui-t-code-title">Enter Secret Code</h1>
+            <input type="text" id="code-input" class="w-full bg-slate-100 border-2 border-slate-300 rounded-xl p-3 mb-4 text-center font-bold text-slate-700 outline-none focus:border-purple-400">
+            <div class="flex gap-2">
+                <button onclick="document.getElementById('modal-code').classList.add('hidden')" class="flex-1 bg-slate-400 text-white font-game py-3 rounded-xl active:scale-95 transition">X</button>
+                <button onclick="window.Game.checkCode()" class="flex-2 w-full bg-purple-500 text-white font-game py-3 rounded-xl active:scale-95 transition" id="ui-t-code-btn">SUBMIT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- End of Day Report Modal -->
+    <div id="modal-report" class="modal-wrap hidden">
+        <div class="bg-white p-6 rounded-[35px] text-center w-[90%] max-w-sm shadow-2xl border-b-8 border-sky-200">
+            <h1 class="text-3xl font-game text-sky-500 mb-4" id="ui-t-report">Shift Report</h1>
+            <div id="report-content" class="text-start text-sm font-bold text-slate-700 bg-slate-50 p-4 rounded-xl space-y-2 mb-6 border border-slate-200"></div>
+            <button onclick="window.Game.openOffice()" class="w-full bg-sky-500 text-white font-game py-4 rounded-2xl text-xl active:scale-95 transition shadow-md" id="ui-t-cont">CONTINUE</button>
+        </div>
+    </div>
+
+    <!-- Office / Shop Modal -->
+    <div id="modal-office" class="modal-wrap hidden">
+        <div class="bg-white flex flex-col overflow-hidden shadow-2xl w-full h-full sm:w-[95%] sm:max-w-md sm:h-[85%] sm:rounded-[35px]">
+            <div class="p-5 bg-sky-50 flex justify-between items-center border-b border-sky-100 shrink-0">
+                <h2 class="text-2xl font-game text-sky-600" id="ui-t-office">The Office</h2>
+                <div class="text-xl font-game text-emerald-600">$<span id="office-budget">0.00</span></div>
+            </div>
+            
+            <div class="flex bg-slate-50 shrink-0">
+                <div class="shop-tab active" id="tab-staff" onclick="window.Game.setShopTab('staff')">STAFF</div>
+                <div class="shop-tab" id="tab-tables" onclick="window.Game.setShopTab('tables')">TABLES</div>
+                <div class="shop-tab" id="tab-perks" onclick="window.Game.setShopTab('perks')">PERKS</div>
+                <div class="shop-tab" id="tab-decor" onclick="window.Game.setShopTab('decor')">DECOR</div>
+            </div>
+
+            <div class="flex-grow overflow-y-auto p-4 bg-slate-50" id="office-content"></div>
+
+            <div class="p-5 bg-white border-t shrink-0">
+                <button onclick="window.Game.nextDay()" class="w-full bg-emerald-500 text-white font-game py-4 rounded-2xl text-xl active:scale-95 transition shadow-md" id="ui-t-open">OPEN RESTAURANT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HUD -->
+    <div id="hud">
+        <div class="flex flex-col w-1/3 text-start justify-center gap-1.5">
+            <div class="flex items-center gap-1">
+                <button onclick="document.getElementById('modal-code').classList.remove('hidden')" class="bg-slate-100 text-slate-600 text-[12px] px-1.5 py-1 rounded-md border border-slate-300 active:bg-slate-200 cursor-pointer">🔑</button>
+                <button onclick="window.AudioManager.toggleMute()" id="ui-btn-mute" class="bg-slate-100 text-slate-600 text-[12px] px-1.5 py-1 rounded-md border border-slate-300 active:bg-slate-200 cursor-pointer">🎵</button>
+                <button onclick="window.Game.pauseGame()" class="bg-slate-100 text-slate-600 text-[12px] px-1.5 py-1 rounded-md border border-slate-300 active:bg-slate-200 cursor-pointer">⏸️</button>
+                <button onclick="window.Game.endDayEarly()" class="bg-rose-500 text-white font-game text-[10px] px-2 py-1 rounded-md shadow-sm active:scale-95" id="ui-t-end-day">END DAY</button>
+            </div>
+            <div class="flex flex-col">
+                <span class="font-game text-amber-600 text-[16px] leading-none"><span id="ui-t-day">Day</span> <span id="ui-day">1</span></span>
+                <span class="text-[9px] font-bold text-slate-500 uppercase"><span id="ui-t-today">TODAY</span>: $<span id="ui-earned">0.00</span> / $<span id="ui-goal">100.00</span></span>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-center w-1/3 relative justify-center">
+            <div class="text-[10px] font-bold text-slate-400 uppercase" id="ui-t-bank">TOTAL BANK</div>
+            <div class="text-2xl font-game text-emerald-600 leading-none mb-0.5">$<span id="ui-money">0.00</span></div>
+            <div id="ui-timer" class="text-lg font-game text-rose-500 leading-none text-center">02:00</div>
+        </div>
+
+        <div class="flex flex-col items-end w-1/3 justify-center">
+            <div class="flex gap-1" id="ui-tray">
+                <div class="tray-slot" id="tray-0"></div><div class="tray-slot" id="tray-1"></div><div class="tray-slot" id="tray-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Play Area -->
+    <div id="play-area" dir="ltr">
+        <div id="decor-radio" class="decor-item">📻</div>
+        <div id="decor-tv" class="decor-item">📺</div>
+        <div id="decor-fountain" class="decor-item">⛲</div>
+        <div id="decor-artist" class="decor-item">🐧🎤<div class="music-note" style="top:-10px; left:10px; animation-delay: 0s">🎵</div><div class="music-note" style="top:-5px; left:30px; animation-delay: 1s">🎶</div></div>
+
+        <!-- Drive Thru -->
+        <div id="drive-thru" onclick="window.Game.clickDriveThru()">
+            <div class="dt-road"></div>
+            <div id="ui-t-dt-label" class="text-white font-game text-[10px] transform -rotate-90 whitespace-nowrap">DRIVE-THRU</div>
+            <div id="dt-bubble" class="bubble hidden" style="left: -20px; top: 10px;"></div>
+        </div>
+
+        <!-- Stations -->
+        <div id="station-mains" class="station" onclick="window.Game.clickStation('mains')">
+            <div class="chef">👨‍🍳</div>
+            <div class="counter-plates" id="plates-mains"></div>
+            <div class="text-[9px] font-bold uppercase text-white bg-amber-600 px-2 rounded-t-md border-b-2 border-amber-800 pointer-events-none" id="ui-t-mains">Kitchen</div>
+            <div class="cooking-bg"><div id="prog-mains" class="cooking-fill" style="width: 0%"></div></div>
+        </div>
+        
+        <div id="station-sweets" class="station" onclick="window.Game.clickStation('sweets')">
+            <div class="chef">👨‍🍳</div>
+            <div class="counter-plates" id="plates-sweets"></div>
+            <div class="text-[9px] font-bold uppercase text-white bg-amber-600 px-2 rounded-t-md border-b-2 border-amber-800 pointer-events-none" id="ui-t-sweets">Sweets</div>
+            <div class="cooking-bg"><div id="prog-sweets" class="cooking-fill" style="width: 0%"></div></div>
+        </div>
+
+        <div id="tables-container"></div>
+        <div id="entities-layer"></div>
+        <div id="queue-area" onclick="window.Game.clickQueueArea()"></div>
+    </div>
+</div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    let db, auth, currentUser, appId;
+
+    function safeText(id, text) { const el = document.getElementById(id); if (el) el.innerText = text; }
+
+    function resizeApp() {
+        const wrapper = document.getElementById('wrapper');
+        const scaleX = window.innerWidth / 400;
+        const scaleY = window.innerHeight / 800;
+        window.gameScale = Math.min(scaleX, scaleY);
+        wrapper.style.transform = `scale(${window.gameScale})`;
+    }
+    window.addEventListener('resize', resizeApp);
+    resizeApp();
+
+    // --- PROCEDURAL AUDIO SYSTEM ---
+    window.AudioManager = {
+        ctx: null, bgmInterval: null, isBgmMuted: false,
+        init() {
+            if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+        },
+        toggleMute() {
+            this.isBgmMuted = !this.isBgmMuted;
+            safeText('ui-btn-mute', this.isBgmMuted ? '🔇' : '🎵');
+            if (this.isBgmMuted) this.stopBGM();
+            else if (window.Game && window.Game.state.active && !window.Game.state.paused) this.playIslandBGM();
+        },
+        _createNoiseBurst(time, duration, freq, maxVol = 0.2) {
+            if (!this.ctx) return;
+            const bufferSize = this.ctx.sampleRate * duration;
+            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            const noise = this.ctx.createBufferSource(); noise.buffer = buffer;
+            const filter = this.ctx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = freq;
+            const gain = this.ctx.createGain(); gain.gain.setValueAtTime(maxVol, time); gain.gain.exponentialRampToValueAtTime(0.01, time + duration);
+            noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+            noise.start(time);
+        },
+        playCoin() {
+            this.init(); if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+            osc.type = 'square'; osc.frequency.setValueAtTime(987.77, now); osc.frequency.setValueAtTime(1318.51, now + 0.1); 
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now); osc.stop(now + 0.3);
+        },
+        playSpeech() {
+            this.init(); if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const syllables = Math.floor(Math.random() * 3) + 4;
+            let timeOffset = 0;
+            for(let i=0; i<syllables; i++) {
+                const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                osc.type = Math.random() > 0.5 ? 'sine' : 'triangle'; osc.frequency.value = 800 + Math.random() * 1000; 
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                const dur = 0.05 + Math.random() * 0.05;
+                gain.gain.setValueAtTime(0.08, now + timeOffset); gain.gain.exponentialRampToValueAtTime(0.01, now + timeOffset + dur);
+                osc.start(now + timeOffset); osc.stop(now + timeOffset + dur);
+                timeOffset += dur + 0.02;
+            }
+        },
+        playDing() {
+            this.init(); if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(1500, now);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            gain.gain.setValueAtTime(0.02, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
+            osc.start(now); osc.stop(now + 1.5);
+        },
+        playPickup() {
+            this.init(); if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now); osc.stop(now + 0.1);
+        },
+        playBuy() {
+            this.init(); if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                osc.type = 'square'; osc.frequency.value = freq;
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                const time = now + (i * 0.08);
+                gain.gain.setValueAtTime(0.03, time); gain.gain.exponentialRampToValueAtTime(0.001, time + 0.2);
+                osc.start(time); osc.stop(time + 0.2);
+            });
+        },
+        playIslandBGM() {
+            this.init(); if (!this.ctx || this.isBgmMuted || this.bgmInterval) return;
+            const scale = [523.25, 587.33, 659.25, 783.99, 880.00]; const bassScale = [130.81, 146.83, 164.81, 196.00]; let step = 0;
+            this.bgmInterval = setInterval(() => {
+                if (this.ctx && this.ctx.state === 'suspended') return;
+                const now = this.ctx.currentTime;
+                if (Math.random() > 0.2) {
+                    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                    osc.type = 'sine'; osc.frequency.value = scale[Math.floor(Math.random() * scale.length)];
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    gain.gain.setValueAtTime(0.04, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.3);
+                }
+                if (step % 2 === 0 && Math.random() > 0.5) {
+                    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                    osc.type = 'triangle'; osc.frequency.value = scale[Math.floor(Math.random() * scale.length)] * 1.5;
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    gain.gain.setValueAtTime(0.02, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                    osc.start(now); osc.stop(now + 0.2);
+                }
+                if (step % 4 === 0) {
+                    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                    osc.type = 'square'; osc.frequency.value = bassScale[Math.floor(Math.random() * bassScale.length)];
+                    const filter = this.ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 400;
+                    osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                    gain.gain.setValueAtTime(0.03, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                    osc.start(now); osc.stop(now + 0.4);
+                }
+                if (step % 2 === 1) this._createNoiseBurst(now, 0.05, 5000, 0.02);
+                step++;
+            }, 250);
+        },
+        stopBGM() { if (this.bgmInterval) { clearInterval(this.bgmInterval); this.bgmInterval = null; } }
+    };
+
+    // --- GLOBALS & TRANSLATIONS ---
+    window.T = {
+        en: {
+            title: "Monkey Restaurant", sub: "Master Tycoon",
+            r1: "🪑 Seat customers by clicking them, then clicking a table.", 
+            r2: "📝 Take their order, cook it, and serve it fast!", 
+            r3: "💵 Collect money, upgrade your restaurant, and hire staff!",
+            start: "NEW GAME", cont_btn: "CONTINUE (Day {day})", report: "Shift Report",
+            office: "The Office", open: "OPEN RESTAURANT", day: "Day", today: "TODAY", bank: "TOTAL BANK",
+            sweets: "Sweets", mains: "Kitchen", cont: "CONTINUE", staff: "STAFF", tables: "TABLES", perks: "PERKS", themes: "DECOR",
+            met: "Met! 🎉", failed: "Failed 📉", goal: "Today's Goal:", base: "Base Food:", ent: "Decor Bonus:", tips: "Tips:",
+            tot_earn: "Total Earned:", you: "You (Manager)", speed: "Speed", max: "MAX", hired: "HIRED", buy_tab: "Buy Extra Table", cap: "Total",
+            widen: "Widen Table", upg: "Upgraded", inc: "Income Upgrade", cur: "Level", unlock_tips: "Tips Upgrade", tip_desc: "Customers leave more tips!",
+            unlocked: "UNLOCKED", owned: "OWNED", equip: "EQUIP", equipped: "EQUIPPED", bonus: "Bonus (Goal Met):", penalty: "Penalty (Failed Goal):",
+            pause: "Paused", resume: "Click anywhere to resume", end_day: "END DAY",
+            vip: "VIP Customers", vip_desc: "Cool outfits & Double Tips!", cook: "Kitchen Upgrade", cook_desc: "Faster kitchen prep",
+            themes_sec: "Themes (Colors)", decor_sec: "Decorations",
+            dt: "Drive-Thru", dt_desc: "Auto-orders without tables", enter_code: "Enter Secret Code", submit: "SUBMIT",
+            decor_desc_radio: "Vibe Radio", decor_desc_tv: "Lounge TV", decor_desc_fount: "Zen Fountain", decor_desc_artist: "Live Singer"
+        },
+        ar: {
+            title: "مطعم القردة", sub: "المدير المحترف",
+            r1: "🪑 أجلس الزبائن بالنقر عليهم ثم النقر على الطاولة.", 
+            r2: "📝 خذ طلبهم، قم بطبخه، وقدمه بسرعة!", 
+            r3: "💵 اجمع المال، قم بترقية مطعمك، ووظف المساعدين!",
+            start: "لعبة جديدة", cont_btn: "متابعة (اليوم {day})", report: "تقرير الوردية",
+            office: "المكتب", open: "بدء اليوم التالي", day: "اليوم", today: "اليوم", bank: "إجمالي البنك",
+            sweets: "حلويات", mains: "المطبخ", cont: "متابعة", staff: "الموظفين", tables: "الطاولات", perks: "الميزات", themes: "الديكورات",
+            met: "تحقق! 🎉", failed: "فشل 📉", goal: "هدف اليوم:", base: "الطعام الأساسي:", ent: "مكافأة الزينة:", tips: "البقشيش:",
+            tot_earn: "الإجمالي المكتسب:", you: "أنت (المدير)", speed: "السرعة", max: "الحد الأقصى", hired: "تم التعيين", buy_tab: "شراء طاولة إضافية", cap: "العدد",
+            widen: "توسيع الطاولة", upg: "تمت الترقية", inc: "ترقية الدخل", cur: "المستوى", unlock_tips: "ترقية البقشيش", tip_desc: "الزبائن يدفعون بقشيشاً أكثر!",
+            unlocked: "مفتوح", owned: "مملوك", equip: "تفعيل", equipped: "مُفعل", bonus: "مكافأة (الهدف تحقق):", penalty: "غرامة (فشل الهدف):",
+            pause: "متوقفة", resume: "انقر للاستئناف", end_day: "إنهاء اليوم",
+            vip: "زبائن VIP", vip_desc: "ملابس رائعة وضعف البقشيش!", cook: "ترقية المطبخ", cook_desc: "تحضير أسرع بالمطبخ",
+            themes_sec: "السمات (الألوان)", decor_sec: "الزينة",
+            dt: "درايف ثرو", dt_desc: "طلبات سيارات بدون جلوس", enter_code: "أدخل الكود السري", submit: "إدخال",
+            decor_desc_radio: "راديو الأجواء", decor_desc_tv: "تلفاز الصالة", decor_desc_fount: "نافورة الاسترخاء", decor_desc_artist: "مغني مباشر"
+        }
+    };
+
+    window.t = function(key) { return window.T[window.Game.lang][key]; };
+
+    window.SVG_MONKEY = function(headColor, earColor, faceColor, suitHTML='', hideEars=false) {
+        const ears = hideEars ? '' : `<circle cx="22" cy="35" r="9" fill="${earColor}" /><circle cx="78" cy="35" r="9" fill="${earColor}" />`;
+        return `
+        <svg viewBox="0 0 100 100" class="monkey-sprite filter drop-shadow-md" style="width:100%;height:100%;">
+            ${suitHTML}
+            <circle cx="50" cy="35" r="22" fill="${headColor}" />
+            ${ears}
+            <ellipse cx="50" cy="40" rx="14" ry="10" fill="${faceColor}" />
+            <circle cx="43" cy="30" r="3.5" fill="#000" />
+            <circle cx="57" cy="30" r="3.5" fill="#000" />
+            <path d="M 45 42 Q 50 48 55 42" stroke="#000" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>`;
+    };
+
+    window.SUIT_PLAYER = `<rect x="25" y="55" width="50" height="40" rx="10" fill="#111" /><rect x="45" y="55" width="10" height="30" fill="#fff" /><polygon points="45,55 55,55 50,75" fill="#ef4444" />`;
+    window.SUIT_MOHAMMED = `<rect x="25" y="55" width="50" height="40" rx="10" fill="#fff" /><rect x="25" y="70" width="50" height="25" rx="5" fill="#8B4513" /><polygon points="45,55 55,55 50,65" fill="#111" />`;
+    window.SUIT_SHIHAB = `<rect x="25" y="55" width="50" height="40" rx="10" fill="#fff" /> <path d="M 28 13 L 72 13 L 80 40 L 20 40 Z" fill="#ef4444" opacity="0.8"/> <path d="M 30 13 L 70 13 L 65 38 L 35 38 Z" fill="#fff" opacity="0.5"/> <ellipse cx="50" cy="14" rx="20" ry="4" fill="none" stroke="#111" stroke-width="4"/>`;
+    window.SUIT_SARA = `<circle cx="50" cy="35" r="26" fill="#111" /> <rect x="30" y="45" width="40" height="30" fill="#111" /> <rect x="25" y="55" width="50" height="40" rx="10" fill="#111" />`;
+
+    window.STAFF_DB = {
+        seater: { en: 'Sara', ar: 'ساره', svg: window.SVG_MONKEY('#8b5cf6', '#7c3aed', '#ddd6fe', window.SUIT_SARA, true), color: '#0ea5e9', d_en: 'Seats customers', d_ar: 'تُجلس الزبائن' },
+        orderer: { en: 'Shihab', ar: 'شهاب', svg: window.SVG_MONKEY('#8b5cf6', '#7c3aed', '#ddd6fe', window.SUIT_SHIHAB, false), color: '#f59e0b', d_en: 'Orders & Cash', d_ar: 'الطلبات والحساب' },
+        server: { en: 'Mohammed', ar: 'محمد', svg: window.SVG_MONKEY('#8b5cf6', '#7c3aed', '#ddd6fe', window.SUIT_MOHAMMED, false), color: '#8b5cf6', d_en: 'Delivers food', d_ar: 'يقدم الطعام' }
+    };
+
+    window.THEMES_DB = [
+        { id: 'wood', en: 'Wood Theme', ar: 'سمة الخشب', emoji: '🪵', cost: 200 },
+        { id: 'pink', en: 'Pink Theme', ar: 'سمة وردية', emoji: '🌸', cost: 200 },
+        { id: 'black', en: 'Black Theme', ar: 'سمة سوداء', emoji: '🕶️', cost: 200 },
+        { id: 'navy', en: 'Navy Theme', ar: 'سمة كحلية', emoji: '🌊', cost: 200 },
+        { id: 'island', en: 'Island Theme', ar: 'سمة الجزيرة', emoji: '🏝️', cost: 200 },
+        { id: 'airport', en: 'Airport Theme', ar: 'سمة المطار', emoji: '✈️', cost: 200 },
+        { id: 'saudi', en: 'Saudi Theme', ar: 'سمة سعودية', emoji: '<img src="https://upload.wikimedia.org/wikipedia/commons/0/0d/Flag_of_Saudi_Arabia.svg" style="width: 1.4em; height: 1em; object-fit: cover; border-radius: 2px;" alt="SA" onerror="this.onerror=null; this.outerHTML=\'🇸🇦\';">', cost: 200 },
+        { id: 'cruise', en: 'Cruise Theme', ar: 'سمة بحرية', emoji: '🛳️', cost: 200 },
+        { id: 'desert', en: 'Desert Theme', ar: 'سمة الصحراء', emoji: '🐪', cost: 200 }
+    ];
+
+    window.DECOR_DB = [
+        { id: 'radio', nameKey: 'decor_desc_radio', emoji: '📻', cost: 200, mult: 0.05 },
+        { id: 'tv', nameKey: 'decor_desc_tv', emoji: '📺', cost: 300, mult: 0.10 },
+        { id: 'fountain', nameKey: 'decor_desc_fount', emoji: '⛲', cost: 400, mult: 0.15 },
+        { id: 'artist', nameKey: 'decor_desc_artist', emoji: '🎤', cost: 500, mult: 0.20 }
+    ];
+
+    window.ANIMALS = ['🐱','🐰','🐻','🐼','🦊','🐨','🐸','🐷'];
+    window.ACCESSORIES = ['😎','🧢','🎩','🎀','👑','🕶️','🤠','🧣'];
+    window.COLORS = ['#f87171','#60a5fa','#34d399','#fbbf24','#a78bfa','#f472b6','#38bdf8','#fb923c'];
+
+    window.generateCustomerHTML = function(cust, inQueue) {
+        if (!cust) return '';
+        const vipTag = (cust.isSuperVIP && inQueue) ? `<div class="super-vip-label">VIP</div>` : '';
+        const accHTML = cust.acc ? `<div class="customer-acc">${cust.acc}</div>` : '';
+        const bodyClass = cust.isSuperVIP ? 'customer-body-suit' : (cust.bodyClass || 'customer-body');
+        const bodyStyle = !cust.isSuperVIP && cust.bodyColor ? `background:${cust.bodyColor}` : '';
+        const overlay = cust.overlay === 'niqab' ? '<div class="niqab-overlay"></div>' : (cust.overlay === 'shimagh' ? '<div class="shimagh-overlay"></div>' : '');
+        
+        return `
+        <div class="customer-fig">
+            ${vipTag}
+            <div class="customer-head">
+                ${cust.head}
+                ${accHTML}
+                ${overlay}
+            </div>
+            <div class="${bodyClass}" style="${bodyStyle}"></div>
+        </div>`;
+    };
+
+    window.Game = {
+        lang: 'en',
+        state: {
+            money: 0, day: 1, goal: 100, time: 120, active: false, paused: false,
+            tables: [], queue: [], tray: [], selectedQ: null, currentTab: 'staff',
+            player: { state: 'idle', location: 'center' }, superVipSpawned: false,
+            dayStats: { base: 0, tips: 0, decor: 0, total: 0 },
+            stations: { mains: { queue: [], cooking: null, progress: 0, ready: [] }, sweets: { queue: [], cooking: null, progress: 0, ready: [] } },
+            staff: { seater: { hired: false, lv: 0, state: 'idle', location: 'center' }, orderer: { hired: false, lv: 0, state: 'idle', location: 'center' }, server: { hired: false, lv: 0, state: 'idle', location: 'center' } },
+            driveThru: { status: 'idle', orderType: null, timer: 0 },
+            stats: { playerSpeedLv: 0, tableCount: 2, upgradedTableCount: 0, cookTime: 3, cookTimeLv: 0, incomeLv: 0, tipsLv: 0, vipUnlocked: false, dtUnlocked: false, currentTheme: 'default',
+                     decor: { radio: false, tv: false, fountain: false, artist: false } 
+            }
+        },
+        
+        lastFrame: 0, animReq: null,
+        BASE_SPEED: 1500,
+
+        setLanguage(lang) {
+            this.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            
+            safeText('ui-t-title', window.t('title')); safeText('ui-t-subtitle', window.t('sub'));
+            const rules = document.getElementById('ui-t-rules').querySelectorAll('p');
+            if(rules.length >= 3){ rules[0].innerText = window.t('r1'); rules[1].innerText = window.t('r2'); rules[2].innerText = window.t('r3'); }
+            safeText('ui-t-start', window.t('start')); safeText('ui-t-report', window.t('report'));
+            safeText('ui-t-office', window.t('office')); safeText('ui-t-open', window.t('open'));
+            safeText('ui-t-day', window.t('day')); safeText('ui-t-today', window.t('today'));
+            safeText('ui-t-bank', window.t('bank')); safeText('ui-t-end-day', window.t('end_day'));
+            safeText('ui-t-sweets', window.t('sweets')); safeText('ui-t-mains', window.t('mains'));
+            safeText('ui-t-cont', window.t('cont')); safeText('ui-t-pause', window.t('pause')); safeText('ui-t-resume', window.t('resume'));
+            safeText('ui-t-code-title', window.t('enter_code')); safeText('ui-t-code-btn', window.t('submit'));
+            safeText('ui-t-dt-label', window.t('dt'));
+            
+            safeText('tab-staff', window.t('staff')); safeText('tab-tables', window.t('tables'));
+            safeText('tab-perks', window.t('perks')); safeText('tab-decor', window.t('themes'));
+
+            document.getElementById('modal-lang').classList.add('hidden');
+            document.getElementById('modal-start').classList.remove('hidden');
+            
+            const btn = document.getElementById('btn-continue');
+            if (btn && !btn.classList.contains('hidden')) btn.innerText = window.t('cont_btn').replace('{day}', this.state.day);
+            this.init();
+        },
+
+        async fetchSaveData() {
+            if (!currentUser || !db) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'save_data');
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    this.state.money = data.money; this.state.day = data.day; this.state.goal = data.goal; this.state.staff = data.staff;
+                    this.state.stats = { ...this.state.stats, ...data.stats };
+                    
+                    const btn = document.getElementById('btn-continue');
+                    if(btn) {
+                        btn.innerText = window.t('cont_btn').replace('{day}', this.state.day);
+                        btn.classList.remove('hidden');
+                    }
+                }
+            } catch(e) {}
+        },
+
+        async saveToCloud() {
+            if (!currentUser || !db) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'save_data');
+                await setDoc(docRef, { money: this.state.money, day: this.state.day, goal: this.state.goal, staff: this.state.staff, stats: this.state.stats });
+            } catch(e) {}
+        },
+
+        init() { this.generateTables(); this.updateUI(); },
+
+        generateTables() {
+            const container = document.getElementById('tables-container');
+            if(!container) return;
+            container.innerHTML = '';
+            for (let i = 0; i < this.state.stats.tableCount; i++) {
+                if (!this.state.tables[i]) this.state.tables[i] = { id: i, status: 'empty', patience: 100, order: [], served: [], party: [], isUpgraded: false, preference: 'both' };
+                this.state.tables[i].isUpgraded = i < (this.state.stats.upgradedTableCount || 0);
+                const t = this.state.tables[i];
+                const el = document.createElement('div'); el.className = `table-group ${t.isUpgraded ? 'upgraded' : ''}`; el.id = `table-${i}`; el.onclick = () => this.clickTable(i);
+                let chairs = t.isUpgraded ? `<div class="chair chair-bot-left" id="c-1-${i}"></div><div class="chair chair-bot-right" id="c-2-${i}"></div>` : `<div class="chair chair-bot-1" id="c-1-${i}"></div>`;
+                el.innerHTML = `<div class="table-surface" id="surf-${i}"></div>${chairs}<div class="table-id-tag">${i+1}</div>`;
+                container.appendChild(el);
+            }
+        },
+
+        startDay(isContinue = false) {
+            window.AudioManager.init();
+            if (!window.AudioManager.isBgmMuted) window.AudioManager.playIslandBGM();
+
+            if (!isContinue) {
+                this.state.money = 0; this.state.day = 1; this.state.goal = 100;
+                this.state.staff = { seater: { hired: false, lv: 0, state: 'idle', location: 'center' }, orderer: { hired: false, lv: 0, state: 'idle', location: 'center' }, server: { hired: false, lv: 0, state: 'idle', location: 'center' } };
+                this.state.stats = { playerSpeedLv: 0, tableCount: 2, upgradedTableCount: 0, cookTime: 3, cookTimeLv: 0, incomeLv: 0, tipsLv: 0, vipUnlocked: false, dtUnlocked: false, currentTheme: 'default', decor: { radio: false, tv: false, fountain: false, artist: false } };
+            }
+
+            if(this.animReq) cancelAnimationFrame(this.animReq);
+            document.querySelectorAll('.modal-wrap').forEach(m => m.classList.add('hidden'));
+            
+            this.state.active = true; this.state.paused = false;
+            this.state.time = 120; this.state.queue = []; this.state.tray = []; this.state.selectedQ = null;
+            this.state.player.state = 'idle'; this.state.player.location = 'center';
+            this.state.dayStats = { base: 0, tips: 0, decor: 0, total: 0 };
+            this.state.superVipSpawned = false;
+            this.state.driveThru = { status: 'idle', orderType: null, timer: 10 }; 
+            
+            this.state.tables.forEach(t => { t.status = 'empty'; t.party = []; t.order = []; t.served = []; t.patience = 100; });
+            this.state.stations = { mains: { queue: [], cooking: null, progress: 0, ready: [] }, sweets: { queue: [], cooking: null, progress: 0, ready: [] } };
+            
+            this.updateTrayUI(); this.generateTables(); this.applyDecor(); this.spawnEntities();
+            this.lastFrame = performance.now();
+            this.animReq = requestAnimationFrame((ts) => this.loop(ts));
+            this.spawnCustomer();
+        },
+
+        pauseGame() {
+            if (!this.state.active || this.state.paused) return;
+            this.state.paused = true;
+            if(window.AudioManager.ctx && window.AudioManager.ctx.state === 'running') window.AudioManager.ctx.suspend();
+            document.getElementById('modal-pause').classList.remove('hidden');
+        },
+
+        resumeGame() {
+            if (!this.state.paused) return;
+            this.state.paused = false;
+            if(window.AudioManager.ctx && window.AudioManager.ctx.state === 'suspended') window.AudioManager.ctx.resume();
+            document.getElementById('modal-pause').classList.add('hidden');
+            this.lastFrame = performance.now(); 
+            this.animReq = requestAnimationFrame((ts) => this.loop(ts));
+        },
+
+        endDayEarly() {
+            if (!this.state.active) return;
+            this.state.time = 0;
+            window.Game.endDay();
+        },
+
+        checkCode() {
+            const val = document.getElementById('code-input').value.toLowerCase().trim();
+            if (val === 'simonxxsimon') { this.state.money += 100000; window.AudioManager.playBuy(); }
+            document.getElementById('code-input').value = '';
+            document.getElementById('modal-code').classList.add('hidden');
+            if(!this.state.active && document.getElementById('office-budget')) document.getElementById('office-budget').innerText = this.state.money.toFixed(2);
+        },
+
+        applyDecor() {
+            const d = this.state.stats.decor; const app = document.getElementById('app'); 
+            app.className = ''; 
+            const theme = this.state.stats.currentTheme;
+            if(theme && theme !== 'default') { app.classList.add(`theme-${theme}`); }
+            
+            const isSaudi = theme === 'saudi' || theme === 'desert';
+
+            document.getElementById('decor-radio').classList.toggle('active', d.radio);
+            document.getElementById('decor-tv').classList.toggle('active', d.tv); 
+            document.getElementById('decor-fountain').classList.toggle('active', d.fountain); 
+            document.getElementById('decor-artist').classList.toggle('active', d.artist); 
+
+            document.getElementById('decor-fountain').innerText = isSaudi ? '🌴' : '⛲';
+            document.getElementById('decor-artist').innerHTML = isSaudi ? '🪕<div class="music-note" style="top:-10px; left:10px; animation-delay: 0s">🎵</div><div class="music-note" style="top:-5px; left:30px; animation-delay: 1s">🎶</div>' : '🐧🎤<div class="music-note" style="top:-10px; left:10px; animation-delay: 0s">🎵</div><div class="music-note" style="top:-5px; left:30px; animation-delay: 1s">🎶</div>';
+
+            const dtEl = document.getElementById('drive-thru');
+            dtEl.style.display = this.state.stats.dtUnlocked ? 'flex' : 'none';
+        },
+
+        getDecorMultiplier() {
+            const d = this.state.stats.decor; let mult = 0;
+            window.DECOR_DB.forEach(item => { if(d[item.id]) mult += item.mult; });
+            return 1 + mult;
+        },
+
+        spawnEntities() {
+            const layer = document.getElementById('entities-layer');
+            layer.innerHTML = `<div id="sprite-player" class="sprite z-[200]" style="width:50px;height:50px;left:0;top:0;transform:translate(calc(-50% + 200px), calc(-50% + 560px));">${window.SVG_MONKEY('#8b5cf6', '#7c3aed', '#ddd6fe', window.SUIT_PLAYER, false)}</div>`;
+
+            Object.keys(this.state.staff).forEach(key => {
+                if (this.state.staff[key].hired) {
+                    const el = document.createElement('div');
+                    el.id = `sprite-${key}`; el.className = 'sprite z-[100]'; el.style.width = '45px'; el.style.height = '45px';
+                    el.innerHTML = `<div class="sprite-tag" style="color:${window.STAFF_DB[key].color}">${window.STAFF_DB[key][this.lang]}</div>${window.STAFF_DB[key].svg}`;
+                    el.style.left = '0'; el.style.top = '0';
+                    el.style.transform = `translate(calc(-50% + 200px), calc(-50% + 560px))`;
+                    layer.appendChild(el);
+                    this.state.staff[key].state = 'idle'; this.state.staff[key].location = 'center';
+                }
+            });
+        },
+
+        getDuration(level, isHelper = false) {
+            const base = isHelper ? (this.BASE_SPEED / 0.6) : this.BASE_SPEED;
+            return base / (1 + (0.05 * level));
+        },
+
+        loop(timestamp) {
+            if (!this.state.active || this.state.paused) return;
+            const dt = (timestamp - this.lastFrame) / 1000;
+            this.lastFrame = timestamp;
+
+            this.state.time -= dt;
+            if (this.state.time <= 0) { 
+                this.state.time = 0; 
+                return window.Game.endDay(); 
+            }
+
+            this.processStations(dt); this.processTables(dt); this.processDriveThru(dt); this.runAI(); this.updateUI();
+            this.animReq = requestAnimationFrame((ts) => this.loop(ts));
+        },
+
+        processTables(dt) {
+            this.state.tables.forEach(t => {
+                if (!['empty', 'reserved', 'eat_mains', 'eat_sweets'].includes(t.status)) {
+                    t.patience -= 2.8 * dt; 
+                    if (t.patience <= 0) this.angryLeave(t);
+                }
+                this.renderTable(t);
+            });
+        },
+
+        processDriveThru(dt) {
+            if (!this.state.stats.dtUnlocked) return;
+            const dtState = this.state.driveThru;
+            const bubble = document.getElementById('dt-bubble');
+
+            if (dtState.status === 'idle') {
+                bubble.classList.add('hidden');
+                dtState.timer -= dt;
+                if (dtState.timer <= 0) {
+                    dtState.status = 'waiting_order';
+                    dtState.orderType = Math.random() > 0.5 ? 'mains' : 'sweets';
+                }
+            } else if (dtState.status === 'waiting_order') {
+                bubble.innerHTML = '🚗 📝'; bubble.classList.remove('hidden');
+            } else if (dtState.status === 'waiting_food') {
+                bubble.innerHTML = '🚗 ⏳'; bubble.classList.remove('hidden');
+            } else if (dtState.status === 'dirty') {
+                bubble.innerHTML = '🚗 💵'; bubble.classList.remove('hidden');
+            }
+        },
+
+        processStations(dt) {
+            const actualCookTime = this.state.stats.cookTime * (1 - ((this.state.stats.cookTimeLv || 0) * 0.05));
+
+            ['mains', 'sweets'].forEach(type => {
+                const st = this.state.stations[type];
+                st.queue = st.queue.filter(o => o.tableId === 'dt' || this.state.tables[o.tableId].status !== 'empty');
+                st.ready = st.ready.filter(o => o.tableId === 'dt' || this.state.tables[o.tableId].status !== 'empty');
+                if (st.cooking && st.cooking.tableId !== 'dt' && this.state.tables[st.cooking.tableId].status === 'empty') { st.cooking = null; st.progress = 0; }
+
+                if (st.cooking) {
+                    st.progress += dt;
+                    if (st.progress >= actualCookTime) {
+                        if (st.ready.length < 3) { 
+                            st.ready.push(st.cooking); 
+                            window.AudioManager.playDing();
+                            st.cooking = null; st.progress = 0; 
+                        }
+                    }
+                } else if (st.queue.length > 0 && st.ready.length < 3) {
+                    st.cooking = st.queue.shift(); st.progress = 0;
+                }
+                document.getElementById(`prog-${type}`).style.width = `${st.cooking ? (st.progress / actualCookTime)*100 : 0}%`;
+                document.getElementById(`plates-${type}`).innerHTML = st.ready.map(p => `<div class="relative filter drop-shadow-md">🍽️<div class="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold px-1 rounded z-10">${p.tableId==='dt'?'🚗':(p.tableId+1)}</div></div>`).join('');
+            });
+        },
+
+        spawnCustomer() {
+            if (!this.state.active) return;
+            if (this.state.queue.length < 5) {
+                let spawnVIP = false;
+                if (!this.state.superVipSpawned && (Math.random() > 0.8 || this.state.time < 40)) {
+                    spawnVIP = true; this.state.superVipSpawned = true;
+                }
+
+                const party = [];
+                const theme = this.state.stats.currentTheme;
+
+                if (spawnVIP) {
+                    party.push({ head: '🐵', bodyColor: '#111', acc: '🕶️', isSuperVIP: true });
+                } else {
+                    const hasDouble = this.state.tables.some(t => t.isUpgraded);
+                    const size = (hasDouble && Math.random() > 0.5) ? 2 : 1;
+                    for(let i=0; i<size; i++) {
+                        let cHead = window.ANIMALS[Math.floor(Math.random()*window.ANIMALS.length)];
+                        let cBody = window.COLORS[Math.floor(Math.random()*window.COLORS.length)];
+                        let cAcc = ''; let cOverlay = ''; let cBodyClass = 'customer-body';
+
+                        if (theme === 'saudi' || theme === 'desert') {
+                            if (Math.random() > 0.5) { cOverlay = 'niqab'; cBody = '#111'; } 
+                            else { cOverlay = 'shimagh'; cBody = '#fff'; }
+                        } else if (theme === 'island') {
+                            cAcc = '🌸'; cBody = ['#38bdf8', '#fb923c', '#f472b6'][Math.floor(Math.random()*3)];
+                        } else if (theme === 'airport') {
+                            cAcc = ['🧢', '📸', '🎒'][Math.floor(Math.random()*3)];
+                        } else if (theme === 'cruise') {
+                            cBodyClass = 'customer-body-white-suit'; cAcc = ['🛳️','⚓','🧭'][Math.floor(Math.random()*3)];
+                        }
+
+                        if (this.state.stats.vipUnlocked && !cOverlay && Math.random() > 0.5) {
+                            cAcc = window.ACCESSORIES[Math.floor(Math.random()*window.ACCESSORIES.length)];
+                        }
+
+                        party.push({ head: cHead, bodyColor: cBody, acc: cAcc, overlay: cOverlay, bodyClass: cBodyClass, isSuperVIP: false });
+                    }
+                }
+
+                this.state.queue.push({ party, reserved: false });
+                this.renderQueue();
+            }
+            setTimeout(() => this.spawnCustomer(), Math.max(3000, 7000 - (this.state.day * 200)));
+        },
+
+        act(entityType, targetId, duration, onComplete) {
+            const ent = entityType === 'player' ? this.state.player : this.state.staff[entityType];
+            ent.state = 'busy';
+
+            if (ent.location === targetId) {
+                onComplete(); ent.state = 'idle';
+            } else {
+                this.moveEntity(entityType, targetId, duration, () => {
+                    ent.location = targetId; onComplete(); ent.state = 'idle';
+                });
+            }
+        },
+
+        clickStation(type) {
+            if (!this.state.active || this.state.player.state !== 'idle') return;
+            this.act('player', `station-${type}`, this.getDuration(this.state.stats.playerSpeedLv), () => {
+                const st = this.state.stations[type];
+                if (st.ready.length > 0 && this.state.tray.length < 3) {
+                    this.state.tray.push(st.ready.shift()); this.updateTrayUI();
+                    window.AudioManager.playPickup();
+                }
+            });
+        },
+
+        clickQueueArea() { },
+        clickQueue(idx) {
+            if (this.state.queue[idx].reserved) return;
+            this.state.selectedQ = idx; this.renderQueue();
+        },
+
+        clickDriveThru() {
+            if (!this.state.active || this.state.player.state !== 'idle' || !this.state.stats.dtUnlocked) return;
+            const dt = this.state.driveThru;
+            if (dt.status === 'idle') return;
+            
+            const dur = this.getDuration(this.state.stats.playerSpeedLv);
+            this.act('player', 'drive-thru', dur, () => {
+                if (dt.status === 'waiting_order') {
+                    dt.status = 'waiting_food';
+                    window.AudioManager.playSpeech();
+                    this.state.stations[dt.orderType].queue.push({ tableId: 'dt', type: dt.orderType, items: ['dt_item'] });
+                } else if (dt.status === 'waiting_food') {
+                    const plateIdx = this.state.tray.findIndex(p => p.tableId === 'dt' && p.type === dt.orderType);
+                    if (plateIdx > -1) {
+                        this.state.tray.splice(plateIdx, 1); this.updateTrayUI();
+                        dt.status = 'dirty';
+                    }
+                } else if (dt.status === 'dirty') {
+                    this.collectMoneyDT();
+                }
+            });
+        },
+
+        collectMoneyDT() {
+            const dt = this.state.driveThru;
+            let base = 15;
+            base *= (1 + (this.state.stats.incomeLv * 0.05));
+            let decorBonusAmt = base * (this.getDecorMultiplier() - 1);
+            let tipAmt = 0;
+            if (this.state.stats.tipsLv > 0) {
+                const tipPercent = 0.05 + (0.01 * this.state.stats.tipsLv); 
+                tipAmt = (base + decorBonusAmt) * tipPercent;
+            }
+
+            const total = base + decorBonusAmt + tipAmt;
+            const actualTip = Math.min(tipAmt, base + decorBonusAmt);
+            
+            this.state.money += total;
+            this.state.dayStats.base += base; this.state.dayStats.decor += decorBonusAmt; this.state.dayStats.tips += actualTip; this.state.dayStats.total += total;
+            
+            window.AudioManager.playCoin();
+            this.showMoneyPop(base + decorBonusAmt, actualTip, `drive-thru`);
+            
+            dt.status = 'idle'; dt.orderType = null; dt.timer = Math.max(8, 20 - this.state.day); 
+        },
+
+        clickTable(id) {
+            if (!this.state.active || this.state.player.state !== 'idle') return;
+            const t = this.state.tables[id];
+            const dur = this.getDuration(this.state.stats.playerSpeedLv);
+
+            if (t.status === 'empty' && this.state.selectedQ !== null) {
+                const group = this.state.queue[this.state.selectedQ];
+                if (!group || (group.party.length === 2 && !t.isUpgraded)) return;
+
+                group.reserved = true; t.status = 'reserved'; 
+                const qIdx = this.state.selectedQ; this.state.selectedQ = null; this.renderQueue();
+
+                this.act('player', 'queue-area', dur, () => {
+                    const currentIdx = this.state.queue.indexOf(group);
+                    if (currentIdx > -1) {
+                        const actualGroup = this.state.queue.splice(currentIdx, 1)[0];
+                        this.renderQueue();
+                        this.state.player.state = 'busy';
+                        this.moveEntity('player', `table-${id}`, dur, () => {
+                            this.state.player.location = `table-${id}`; t.status = 'seated'; t.party = actualGroup.party; 
+                            t.preference = ['mains', 'sweets', 'both'][Math.floor(Math.random() * 3)];
+                            this.state.player.state = 'idle';
+                        });
+                    } else {
+                        t.status = 'empty'; this.state.player.state = 'idle';
+                    }
+                });
+                return;
+            }
+            
+            this.act('player', `table-${id}`, dur, () => {
+                if (t.status === 'seated') {
+                    const firstCourse = ['mains', 'both'].includes(t.preference) ? 'mains' : 'sweets';
+                    this.assignOrder(t, firstCourse);
+                }
+                else if (t.status === 'order_sweets') this.assignOrder(t, 'sweets');
+                else if (['wait_mains', 'wait_sweets'].includes(t.status)) {
+                    const reqType = t.status === 'wait_mains' ? 'mains' : 'sweets';
+                    const plateIdx = this.state.tray.findIndex(p => p.tableId === t.id && p.type === reqType);
+                    
+                    if (plateIdx > -1) {
+                        this.state.tray.splice(plateIdx, 1); this.updateTrayUI();
+                        t.status = t.status === 'wait_mains' ? 'eat_mains' : 'eat_sweets';
+                        setTimeout(() => {
+                            if (!this.state.active) return;
+                            if (t.status === 'eat_mains') t.status = t.preference === 'both' ? 'order_sweets' : 'dirty';
+                            else if (t.status === 'eat_sweets') t.status = 'dirty';
+                        }, 4000);
+                    }
+                }
+                else if (t.status === 'dirty') this.collectMoney(t);
+            });
+        },
+
+        assignOrder(t, type) {
+            t.served = []; t.status = type === 'mains' ? 'wait_mains' : 'wait_sweets';
+            t.order = t.party.map(() => 'item');
+            window.AudioManager.playSpeech();
+            this.state.stations[type].queue.push({ tableId: t.id, type: type, items: [...t.order] });
+        },
+
+        collectMoney(t) {
+            const courses = t.preference === 'both' ? 2 : 1;
+            let basePerPerson = 0;
+            
+            if (t.patience > 50) basePerPerson = courses === 2 ? 20 : 10;
+            else if (t.patience > 25) basePerPerson = courses === 2 ? 15 : 8;
+            else basePerPerson = courses === 2 ? 10 : 6;
+            
+            let finalBase = basePerPerson * t.party.length;
+            if (t.isUpgraded) finalBase *= 1.5;
+            finalBase *= (1 + (this.state.stats.incomeLv * 0.05));
+            
+            let isSuperVIP = t.party.some(p => p.isSuperVIP);
+            if (isSuperVIP) finalBase *= 2;
+
+            let decorBonusAmt = finalBase * (this.getDecorMultiplier() - 1);
+            let tipAmt = 0;
+            if (this.state.stats.tipsLv > 0) {
+                const baseTipPercent = (Math.floor(Math.random() * 11) + 5) / 100; 
+                const upgradedTipPercent = baseTipPercent * (1 + (this.state.stats.tipsLv * 0.2));
+                tipAmt = (finalBase + decorBonusAmt) * upgradedTipPercent * (t.patience / 100);
+                if (this.state.stats.vipUnlocked || isSuperVIP) tipAmt *= 2; 
+            }
+
+            const total = finalBase + decorBonusAmt + tipAmt;
+            const actualTip = Math.min(tipAmt, finalBase + decorBonusAmt);
+
+            this.state.money += total;
+            this.state.dayStats.base += finalBase; this.state.dayStats.decor += decorBonusAmt; this.state.dayStats.tips += actualTip; this.state.dayStats.total += total;
+            
+            window.AudioManager.playCoin();
+            this.showMoneyPop(finalBase + decorBonusAmt, actualTip, `table-${t.id}`);
+            this.resetTable(t);
+        },
+
+        angryLeave(t) { this.resetTable(t); },
+        resetTable(t) { t.status = 'empty'; t.party = []; t.order = []; t.served = []; t.patience = 100; },
+
+        runAI() {
+            const s = this.state.staff;
+            
+            // SARA (Seater)
+            if (s.seater.hired && s.seater.state === 'idle' && this.state.queue.length > 0) {
+                const qIdx = this.state.queue.findIndex(q => !q.reserved);
+                if (qIdx > -1) {
+                    const group = this.state.queue[qIdx];
+                    const validTable = this.state.tables.find(t => t.status === 'empty' && (group.party.length === 1 || t.isUpgraded));
+                    
+                    if (validTable) {
+                        group.reserved = true; validTable.status = 'reserved';
+                        const dur = this.getDuration(s.seater.lv, true);
+
+                        this.act('seater', 'queue-area', dur, () => {
+                            const currentIdx = this.state.queue.indexOf(group);
+                            if (currentIdx > -1) {
+                                const actualGroup = this.state.queue.splice(currentIdx, 1)[0]; this.renderQueue();
+                                s.seater.state = 'busy';
+                                this.moveEntity('seater', `table-${validTable.id}`, dur, () => {
+                                    s.seater.location = `table-${validTable.id}`;
+                                    validTable.status = 'seated'; validTable.party = actualGroup.party; 
+                                    validTable.preference = ['mains', 'sweets', 'both'][Math.floor(Math.random() * 3)];
+                                    s.seater.state = 'idle';
+                                });
+                            } else {
+                                validTable.status = 'empty'; s.seater.state = 'idle';
+                            }
+                        });
+                    }
+                }
+            }
+
+            // SHIHAB (Orderer / Cashier / DriveThru Orders)
+            if (s.orderer.hired && s.orderer.state === 'idle') {
+                const dirty = this.state.tables.find(t => t.status === 'dirty');
+                const needsOrder = this.state.tables.find(t => t.status === 'seated' || t.status === 'order_sweets');
+                const dt = this.state.driveThru;
+                
+                if (this.state.stats.dtUnlocked && dt.status === 'dirty') {
+                    this.act('orderer', `drive-thru`, this.getDuration(s.orderer.lv, true), () => { if(dt.status === 'dirty') this.collectMoneyDT(); });
+                } else if (dirty) {
+                    this.act('orderer', `table-${dirty.id}`, this.getDuration(s.orderer.lv, true), () => { if(dirty.status === 'dirty') this.collectMoney(dirty); });
+                } else if (this.state.stats.dtUnlocked && dt.status === 'waiting_order') {
+                    this.act('orderer', `drive-thru`, this.getDuration(s.orderer.lv, true), () => {
+                        if (dt.status === 'waiting_order') {
+                            dt.status = 'waiting_food'; window.AudioManager.playSpeech();
+                            this.state.stations[dt.orderType].queue.push({ tableId: 'dt', type: dt.orderType, items: ['dt'] });
+                        }
+                    });
+                } else if (needsOrder) {
+                    this.act('orderer', `table-${needsOrder.id}`, this.getDuration(s.orderer.lv, true), () => {
+                        if(needsOrder.status === 'seated') { const firstCourse = ['mains', 'both'].includes(needsOrder.preference) ? 'mains' : 'sweets'; this.assignOrder(needsOrder, firstCourse); }
+                        else if(needsOrder.status === 'order_sweets') this.assignOrder(needsOrder, 'sweets');
+                    });
+                }
+            }
+
+            // MOHAMMED (Server)
+            if (s.server.hired && s.server.state === 'idle') {
+                let p = null, type = null;
+                if (this.state.stations.mains.ready.length > 0) { p = this.state.stations.mains.ready[0]; type = 'mains'; }
+                else if (this.state.stations.sweets.ready.length > 0) { p = this.state.stations.sweets.ready[0]; type = 'sweets'; }
+
+                if (p) {
+                    const dur = this.getDuration(s.server.lv, true);
+                    this.act('server', `station-${type}`, dur, () => {
+                        const st = this.state.stations[type]; const idx = st.ready.indexOf(p);
+                        if (idx > -1) {
+                            st.ready.splice(idx, 1); s.server.state = 'busy';
+                            window.AudioManager.playPickup();
+                            
+                            const targetId = p.tableId === 'dt' ? 'drive-thru' : `table-${p.tableId}`;
+                            
+                            this.moveEntity('server', targetId, dur, () => {
+                                s.server.location = targetId;
+                                if (p.tableId === 'dt') {
+                                    if (this.state.driveThru.status === 'waiting_food') this.state.driveThru.status = 'dirty';
+                                } else {
+                                    const t = this.state.tables[p.tableId];
+                                    if (t && (t.status === 'wait_mains' || t.status === 'wait_sweets')) {
+                                        t.status = t.status === 'wait_mains' ? 'eat_mains' : 'eat_sweets';
+                                        setTimeout(() => {
+                                            if (!this.state.active) return;
+                                            if (t.status === 'eat_mains') t.status = t.preference === 'both' ? 'order_sweets' : 'dirty';
+                                            else if (t.status === 'eat_sweets') t.status = 'dirty';
+                                        }, 4000);
+                                    }
+                                }
+                                s.server.state = 'idle';
+                            });
+                        }
+                    });
+                }
+            }
+        },
+
+        moveEntity(entityId, targetElId, durationMs, callback) {
+            const sprite = document.getElementById(`sprite-${entityId}`);
+            const target = document.getElementById(targetElId);
+            const wrapper = document.getElementById('wrapper');
+            if (!sprite || !target || !wrapper) return;
+
+            const tRect = target.getBoundingClientRect();
+            const wRect = wrapper.getBoundingClientRect();
+            const scale = window.gameScale || 1;
+
+            let x = (tRect.left - wRect.left) / scale + (tRect.width / scale / 2);
+            let y = (tRect.top - wRect.top) / scale + (tRect.height / scale / 2);
+
+            if (targetElId.includes('table') || targetElId === 'drive-thru') { x -= 40; y += 10; }
+
+            sprite.style.transition = `transform ${durationMs}ms linear`;
+            sprite.style.transform = `translate(calc(-50% + ${Math.round(x)}px), calc(-50% + ${Math.round(y)}px))`;
+            setTimeout(() => { if(callback) callback(); }, durationMs);
+        },
+
+        renderTable(t) {
+            const surf = document.getElementById(`surf-${t.id}`);
+            if(!surf) return;
+
+            if (t.isUpgraded) { document.getElementById(`c-1-${t.id}`).innerHTML = t.party[0] ? window.generateCustomerHTML(t.party[0], false) : ''; document.getElementById(`c-2-${t.id}`).innerHTML = t.party[1] ? window.generateCustomerHTML(t.party[1], false) : ''; } 
+            else { document.getElementById(`c-1-${t.id}`).innerHTML = t.party[0] ? window.generateCustomerHTML(t.party[0], false) : ''; }
+
+            surf.innerHTML = '';
+            if (!['empty', 'reserved'].includes(t.status)) {
+                const color = t.patience > 50 ? '#22c55e' : (t.patience > 25 ? '#f59e0b' : '#ef4444');
+                surf.innerHTML += `<div class="patience-bar"><div class="patience-fill" style="width:${t.patience}%; background:${color}"></div></div>`;
+                const b = document.createElement('div'); b.className = 'bubble';
+                
+                if (t.status === 'seated') b.innerHTML = ['mains', 'both'].includes(t.preference) ? '📝' : '🍰❓';
+                else if (t.status === 'order_sweets') b.innerHTML = '🍰❓';
+                else if (t.status === 'wait_mains' || t.status === 'wait_sweets') b.innerHTML = '⏳';
+                else if (t.status.includes('eat')) b.innerHTML = '😋';
+                else if (t.status === 'dirty') b.innerHTML = '💵';
+                
+                surf.appendChild(b);
+            }
+        },
+
+        renderQueue() {
+            const q = document.getElementById('queue-area');
+            q.innerHTML = '';
+            this.state.queue.forEach((c, idx) => {
+                const el = document.createElement('div');
+                const hasDouble = this.state.tables.some(t => t.isUpgraded);
+                const disabled = (c.party.length === 2 && !hasDouble) || c.reserved;
+                
+                el.className = `q-spot ${this.state.selectedQ === idx ? 'selected' : ''} ${disabled ? 'opacity-50' : ''}`;
+                
+                let innerHtml = '';
+                c.party.forEach(p => { innerHtml += window.generateCustomerHTML(p, true); });
+                el.innerHTML = innerHtml;
+
+                if (!disabled) el.onclick = (e) => { e.stopPropagation(); this.clickQueue(idx); };
+                q.appendChild(el);
+            });
+        },
+
+        updateTrayUI() {
+            for(let i=0; i<3; i++) {
+                const slot = document.getElementById(`tray-${i}`);
+                if (!slot) continue;
+                const plate = this.state.tray[i];
+                slot.innerHTML = plate ? `🍽️<div class="tray-badge">${plate.tableId==='dt'?'🚗':'T'+(plate.tableId+1)}</div>` : '';
+            }
+        },
+
+        updateUI() {
+            safeText('ui-money', this.state.money.toFixed(2));
+            safeText('ui-earned', this.state.dayStats.total.toFixed(2));
+            safeText('ui-day', this.state.day);
+            safeText('ui-goal', this.state.goal.toFixed(2));
+            
+            const m = Math.floor(Math.max(0, this.state.time) / 60); const s = Math.floor(Math.max(0, this.state.time) % 60);
+            safeText('ui-timer', `${m}:${s.toString().padStart(2, '0')}`);
+            const timerEl = document.getElementById('ui-timer');
+            if(timerEl) timerEl.className = "text-lg font-game text-rose-500 leading-none text-center";
+        },
+
+        showMoneyPop(base, tip, targetId) {
+            const target = document.getElementById(targetId);
+            const wrapper = document.getElementById('wrapper');
+            const playArea = document.getElementById('play-area');
+            if(!target || !wrapper || !playArea) return;
+            const tRect = target.getBoundingClientRect(); const wRect = wrapper.getBoundingClientRect();
+            const scale = window.gameScale || 1;
+            
+            const el = document.createElement('div'); el.className = 'money-float'; 
+            el.innerHTML = `<div>+$${base.toFixed(2)}</div>${tip > 0 ? `<div class="text-[12px] text-yellow-400 bg-slate-900/80 px-1 rounded">+$${tip.toFixed(2)}</div>` : ''}`;
+            el.style.left = `${(tRect.left - wRect.left) / scale + 25}px`; el.style.top = `${(tRect.top - wRect.top) / scale - 20}px`;
+            playArea.appendChild(el);
+            setTimeout(() => el.remove(), 1500);
+        },
+
+        async endDay() {
+            window.AudioManager.stopBGM();
+            this.state.active = false;
+            cancelAnimationFrame(this.animReq);
+            
+            document.getElementById('modal-report').classList.remove('hidden');
+            const d = this.state.dayStats; const met = d.total >= this.state.goal;
+
+            let bonusPenaltyHtml = '';
+            if (met) {
+                this.state.money += 20;
+                bonusPenaltyHtml = `<div class="flex justify-between font-bold text-emerald-600 border-t pt-1 border-slate-200 mt-1"><span>${window.t('bonus')}</span> <span>+$20.00</span></div>`;
+            } else {
+                this.state.money = Math.max(0, this.state.money - 50);
+                bonusPenaltyHtml = `<div class="flex justify-between font-bold text-rose-600 border-t pt-1 border-slate-200 mt-1"><span>${window.t('penalty')}</span> <span>-$50.00</span></div>`;
+            }
+            
+            document.getElementById('report-content').innerHTML = `
+                <div class="text-center text-lg mb-2 ${met ? 'text-emerald-600' : 'text-rose-600'}">${window.t('goal')} ${met ? window.t('met') : window.t('failed')}</div>
+                <div class="flex justify-between border-b pb-1 border-slate-200"><span>${window.t('base')}</span> <span>$${d.base.toFixed(2)}</span></div>
+                <div class="flex justify-between border-b pb-1 border-slate-200"><span>${window.t('ent')}</span> <span class="text-purple-600">+$${d.decor.toFixed(2)}</span></div>
+                <div class="flex justify-between border-b pb-1 border-slate-200"><span>${window.t('tips')}</span> <span class="text-yellow-600">+$${d.tips.toFixed(2)}</span></div>
+                <div class="flex justify-between font-bold text-lg pt-1"><span>${window.t('tot_earn')}</span> <span>$${d.total.toFixed(2)}</span></div>
+                ${bonusPenaltyHtml}
+            `;
+
+            if(typeof window.Game.saveToCloud === 'function') await window.Game.saveToCloud();
+        },
+
+        openOffice() {
+            document.getElementById('modal-report').classList.add('hidden');
+            document.getElementById('modal-office').classList.remove('hidden');
+            safeText('office-budget', this.state.money.toFixed(2));
+            this.setShopTab('staff');
+        },
+
+        setShopTab(tabId) {
+            this.state.currentTab = tabId;
+            const content = document.getElementById('office-content'); content.innerHTML = '';
+            document.querySelectorAll('.shop-tab').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            if (tabId === 'staff') {
+                const arr = [];
+                const pMax = this.state.stats.playerSpeedLv >= 10;
+                arr.push({html: `
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center mb-2">
+                        <div><div class="font-bold text-sky-600">${window.t('you')}</div><div class="text-xs font-bold text-slate-400 uppercase">${window.t('cur')}: ${this.state.stats.playerSpeedLv} / 10</div></div>
+                        <button onclick="window.Game.buy('player_speed', 150)" class="px-5 py-2 rounded-xl font-game text-white ${pMax?'bg-slate-300':'bg-sky-500'}" ${pMax?'disabled':''}>${pMax?window.t('max'):'$150'}</button>
+                    </div>`});
+
+                Object.keys(window.STAFF_DB).forEach(k => {
+                    const h = this.state.staff[k]; const name = window.STAFF_DB[k][this.lang]; const desc = window.STAFF_DB[k][`d_${this.lang}`];
+                    if (!h.hired) {
+                        arr.push({html: `
+                            <div class="bg-slate-50 p-4 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center mb-2">
+                                <div class="flex gap-3"><div class="text-3xl" style="width:35px;height:35px;">${window.STAFF_DB[k].svg}</div><div><div class="font-bold" style="color:${window.STAFF_DB[k].color}">${name}</div><div class="text-[10px] font-bold text-slate-400 uppercase">${desc}</div></div></div>
+                                <button onclick="window.Game.buy('hire_${k}', 150)" class="px-5 py-2 rounded-xl font-game text-white bg-emerald-500 shadow-sm active:scale-95">$150</button>
+                            </div>`});
+                    } else {
+                        const hMax = h.lv >= 10;
+                        arr.push({html: `
+                            <div class="bg-sky-50 p-4 rounded-2xl shadow-sm border border-sky-200 flex justify-between items-center mb-2">
+                                <div class="flex gap-3"><div class="text-3xl" style="width:35px;height:35px;">${window.STAFF_DB[k].svg}</div><div><div class="font-bold text-sky-800">${name}</div><div class="text-[10px] font-bold text-sky-500 uppercase">${window.t('cur')}: ${h.lv} / 10</div></div></div>
+                                <button onclick="window.Game.buy('up_${k}', 150)" class="px-5 py-2 rounded-xl font-game text-white shadow-sm active:scale-95 ${hMax?'bg-slate-300':'bg-amber-500'}" ${hMax?'disabled':''}>${hMax?window.t('max'):'$150'}</button>
+                            </div>`});
+                    }
+                });
+                arr.forEach(i => content.innerHTML += i.html);
+            } else if (tabId === 'tables') {
+                const arr = [];
+                const canBuyTable = this.state.stats.tableCount < 8;
+                arr.push({html: `
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center mb-3">
+                        <div><div class="font-bold text-slate-700">${window.t('buy_tab')}</div><div class="text-xs text-slate-400 font-bold uppercase">${window.t('cap')}: ${this.state.stats.tableCount} / 8</div></div>
+                        <button onclick="window.Game.buy('new_table', 120)" class="px-5 py-2 rounded-xl font-game text-white ${canBuyTable?'bg-sky-500 active:scale-95':'bg-slate-300'}" ${!canBuyTable?'disabled':''}>${canBuyTable?'$120':window.t('max')}</button>
+                    </div>`});
+
+                const canUpTable = this.state.stats.upgradedTableCount < this.state.stats.tableCount;
+                arr.push({html: `
+                    <div class="bg-amber-50 p-4 rounded-2xl shadow-sm border border-amber-200 flex justify-between items-center">
+                        <div><div class="font-bold text-amber-700">${window.t('widen')}</div><div class="text-[10px] text-amber-600 font-bold uppercase">${window.t('upg')}: ${this.state.stats.upgradedTableCount} / ${this.state.stats.tableCount}</div></div>
+                        <button onclick="window.Game.buy('up_table', 500)" class="px-5 py-2 rounded-xl font-game text-white ${canUpTable?'bg-amber-500 active:scale-95':'bg-slate-300'}" ${!canUpTable?'disabled':''}>${canUpTable?'$500':window.t('max')}</button>
+                    </div>`});
+                arr.forEach(i => content.innerHTML += i.html);
+            } else if (tabId === 'perks') {
+                const arr = [];
+                const pLv = this.state.stats.incomeLv; const pCost = 100 + (pLv * 50); const pMax = pLv >= 10;
+                arr.push({ html: `
+                    <div class="bg-emerald-50 p-4 rounded-2xl shadow-sm border border-emerald-200 flex justify-between items-center mb-3">
+                        <div><div class="font-bold text-emerald-700">${window.t('inc')}</div><div class="text-[10px] text-emerald-600 font-bold uppercase">${window.t('cur')}: ${pLv} / 10</div></div>
+                        <button onclick="window.Game.buy('income', ${pCost})" class="px-5 py-2 rounded-xl font-game text-white ${pMax?'bg-slate-300':'bg-emerald-500 active:scale-95'}" ${pMax?'disabled':''}>${pMax?window.t('max'):'$'+pCost}</button>
+                    </div>` });
+
+                const cLv = this.state.stats.cookTimeLv || 0; const cCost = 300 + (cLv * 50); const cMax = cLv >= 10;
+                arr.push({ html: `
+                    <div class="bg-orange-50 p-4 rounded-2xl shadow-sm border border-orange-200 flex justify-between items-center mb-3">
+                        <div><div class="font-bold text-orange-700">${window.t('cook')}</div><div class="text-[10px] text-orange-600 font-bold uppercase">${window.t('cur')}: ${cLv} / 10</div></div>
+                        <button onclick="window.Game.buy('cook_time', ${cCost})" class="px-5 py-2 rounded-xl font-game text-white ${cMax?'bg-slate-300':'bg-orange-500 active:scale-95'}" ${cMax?'disabled':''}>${cMax?window.t('max'):'$'+cCost}</button>
+                    </div>` });
+
+                const tLv = this.state.stats.tipsLv || 0; const tCost = 350 + (tLv * 150); const tMax = tLv >= 10;
+                arr.push({ html: `
+                    <div class="bg-yellow-50 p-4 rounded-2xl shadow-sm border border-yellow-200 flex justify-between items-center mb-3">
+                        <div><div class="font-bold text-yellow-700">${window.t('unlock_tips')}</div><div class="text-[10px] text-yellow-600 font-bold uppercase">${window.t('cur')}: ${tLv} / 10</div></div>
+                        <button onclick="window.Game.buy('tips', ${tCost})" class="px-5 py-2 rounded-xl font-game text-white ${tMax?'bg-slate-300':'bg-yellow-500 active:scale-95'}" ${tMax?'disabled':''}>${tMax?window.t('max'):'$'+tCost}</button>
+                    </div>` });
+
+                const vip = this.state.stats.vipUnlocked; const vCost = 1000;
+                arr.push({ html: `
+                    <div class="bg-purple-50 p-4 rounded-2xl shadow-sm border border-purple-200 flex justify-between items-center mb-3">
+                        <div><div class="font-bold text-purple-700">${window.t('vip')}</div><div class="text-[10px] text-purple-600 font-bold uppercase">${window.t('vip_desc')}</div></div>
+                        <button onclick="window.Game.buy('vip', ${vCost})" class="px-5 py-2 rounded-xl font-game text-white ${vip?'bg-slate-300':'bg-purple-500 active:scale-95'}" ${vip?'disabled':''}>${vip?window.t('unlocked'):'$'+vCost}</button>
+                    </div>` });
+                
+                const dt = this.state.stats.dtUnlocked; const dtCost = 1000;
+                arr.push({ html: `
+                    <div class="bg-slate-100 p-4 rounded-2xl shadow-sm border border-slate-300 flex justify-between items-center mb-3">
+                        <div><div class="font-bold text-slate-700">${window.t('dt')}</div><div class="text-[10px] text-slate-500 font-bold uppercase">${window.t('dt_desc')}</div></div>
+                        <button onclick="window.Game.buy('dt', ${dtCost})" class="px-5 py-2 rounded-xl font-game text-white ${dt?'bg-slate-300':'bg-slate-700 active:scale-95'}" ${dt?'disabled':''}>${dt?window.t('unlocked'):'$'+dtCost}</button>
+                    </div>` });
+
+                arr.forEach(p => content.innerHTML += p.html);
+
+            } else if (tabId === 'decor') {
+                const d = this.state.stats.decor;
+                content.innerHTML += `<div class="font-game text-slate-500 text-sm mb-2 mt-1 ml-1">${window.t('themes_sec')}</div>`;
+                window.THEMES_DB.forEach(item => {
+                    const owns = d[item.id];
+                    const isEquipped = this.state.stats.currentTheme === item.id;
+                    let btnHTML = '';
+                    if (isEquipped) { btnHTML = `<button class="px-4 py-2 rounded-xl font-game text-white text-xs bg-slate-300" disabled>${window.t('equipped')}</button>`; }
+                    else if (owns) { btnHTML = `<button onclick="window.Game.equipTheme('${item.id}')" class="px-4 py-2 rounded-xl font-game text-white text-xs bg-emerald-500 active:scale-95">${window.t('equip')}</button>`; }
+                    else { btnHTML = `<button onclick="window.Game.buy('decor_${item.id}', ${item.cost})" class="px-4 py-2 rounded-xl font-game text-white text-xs bg-sky-500 active:scale-95">$${item.cost}</button>`; }
+
+                    content.innerHTML += `
+                        <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center mb-2">
+                            <div class="flex gap-3 items-center"><div class="text-2xl">${item.emoji}</div><div class="font-bold text-slate-700 text-sm">${item[this.lang]}</div></div>
+                            ${btnHTML}
+                        </div>`;
+                });
+
+                content.innerHTML += `<div class="font-game text-slate-500 text-sm mb-2 mt-4 ml-1">${window.t('decor_sec')}</div>`;
+                window.DECOR_DB.forEach(item => {
+                    const owns = d[item.id];
+                    const nameStr = window.t(item.nameKey) || item[this.lang];
+                    content.innerHTML += `
+                        <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center mb-2">
+                            <div class="flex gap-3 items-center"><div class="text-2xl">${item.emoji}</div><div class="font-bold text-slate-700 text-sm">${nameStr}</div></div>
+                            <button onclick="window.Game.buy('decor_${item.id}', ${item.cost})" class="px-4 py-2 rounded-xl font-game text-white text-xs ${owns?'bg-slate-300':'bg-purple-500 active:scale-95'}" ${owns?'disabled':''}>${owns?window.t('owned'):'$'+item.cost}</button>
+                        </div>`;
+                });
+            }
+        },
+
+        buy(action, cost) {
+            if (this.state.money < cost) return;
+            this.state.money -= cost;
+            window.AudioManager.playBuy();
+            
+            if (action === 'player_speed') { if((this.state.stats.playerSpeedLv||0) < 10) this.state.stats.playerSpeedLv++; }
+            else if (action === 'cook_time') { if((this.state.stats.cookTimeLv||0) < 10) this.state.stats.cookTimeLv++; }
+            else if (action.startsWith('hire_')) this.state.staff[action.replace('hire_','')].hired = true;
+            else if (action.startsWith('up_') && action !== 'up_table') {
+                const type = action.replace('up_','');
+                if((this.state.staff[type].lv||0) < 10) this.state.staff[type].lv++;
+            }
+            else if (action === 'new_table') { if(this.state.stats.tableCount < 8) this.state.stats.tableCount++; }
+            else if (action === 'up_table') { 
+                if(this.state.stats.upgradedTableCount < this.state.stats.tableCount) {
+                    this.state.stats.upgradedTableCount = (this.state.stats.upgradedTableCount || 0) + 1;
+                    for(let i=0; i<this.state.stats.tableCount; i++){
+                        if(this.state.tables[i] && !this.state.tables[i].isUpgraded) { this.state.tables[i].isUpgraded = true; break; }
+                    }
+                }
+            }
+            else if (action === 'income') { if((this.state.stats.incomeLv||0) < 10) this.state.stats.incomeLv++; }
+            else if (action === 'tips') { 
+                this.state.stats.tipsUnlocked = true; 
+                if((this.state.stats.tipsLv || 0) < 10) this.state.stats.tipsLv = (this.state.stats.tipsLv || 0) + 1; 
+            }
+            else if (action === 'vip') this.state.stats.vipUnlocked = true;
+            else if (action === 'dt') this.state.stats.dtUnlocked = true;
+            else if (action.startsWith('decor_')) {
+                const dec = action.replace('decor_','');
+                this.state.stats.decor[dec] = true;
+                if(['wood','pink','black','navy','island','airport','saudi','cruise','desert'].includes(dec)) {
+                    this.state.stats.currentTheme = dec;
+                }
+            }
+
+            safeText('office-budget', this.state.money.toFixed(2));
+            this.setShopTab(this.state.currentTab);
+        },
+
+        equipTheme(id) {
+            this.state.stats.currentTheme = id;
+            window.AudioManager.playBuy();
+            this.setShopTab(this.state.currentTab);
+        },
+
+        nextDay() { 
+            this.state.day++; 
+            this.state.goal = this.state.goal * 1.15; 
+            this.startDay(true); 
+        }
+    };
+
+    async function initFirebase() {
+        try {
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+            appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            if (!firebaseConfig) return; 
+
+            const app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app);
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token); else await signInAnonymously(auth);
+            onAuthStateChanged(auth, async (user) => { if (user) { currentUser = user; await window.Game.fetchSaveData(); } });
+        } catch (e) { }
+    }
+
+    initFirebase();
+</script>
+</body>
+</html>
